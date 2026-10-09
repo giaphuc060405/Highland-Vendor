@@ -1,10 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
 
-@custom-variant dark (&:is(.dark *));
+:root {
+    color-scheme: light;
+}
 
 body {
     font-family: 'Roboto', sans-serif;
@@ -17,6 +18,8 @@ body {
     gap: 1em;
 }
 
+/* Tailwind CSS v4 directive; allow Stylelint's unknown at-rule check here. */
+/* stylelint-disable at-rule-no-unknown */
 @theme inline {
     --font-heading: var(--font-sans);
     --font-sans: 'Geist Variable', sans-serif;
@@ -59,6 +62,7 @@ body {
     --radius-3xl: calc(var(--radius) * 2.2);
     --radius-4xl: calc(var(--radius) * 2.6);
 }
+  /* stylelint-enable at-rule-no-unknown */
 
 :root {
     --background: oklch(1 0 0);
@@ -96,6 +100,7 @@ body {
 }
 
 .dark {
+    color-scheme: dark;
     --background: oklch(0.145 0 0);
     --foreground: oklch(0.985 0 0);
     --card: oklch(0.205 0 0);
