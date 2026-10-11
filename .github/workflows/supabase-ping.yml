@@ -1,0 +1,19 @@
+name: Ping Supabase
+
+on:
+  schedule:
+    # Lịch chạy theo chuẩn Cron (UTC). 
+    # Ví dụ dưới đây chạy vào lúc 0:00 UTC cứ mỗi 3 ngày một lần.
+    - cron: '0 0 */3 * *'
+  # Cho phép bạn chạy thủ công trực tiếp trên tab Actions của GitHub khi cần
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send request to Supabase
+        run: |
+          curl -X GET "${{ secrets.SUPABASE_URL }}/rest/v1/" \
+          -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+          -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}"
