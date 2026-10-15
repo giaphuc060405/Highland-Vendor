@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button"
+
 interface CardProps {
     image: string,
     title: string,
@@ -11,9 +11,9 @@ export default function Card({image, title, price}: CardProps) {
             <img src={image} alt={title} className="h-40 w-full object-contain" />
             <p className="line-clamp-2 min-h-12 text-center text-lg font-bold">{title}</p>
             <p className="text-base font-medium">{price.toLocaleString('vi-VN')} đ</p>
-            <Button variant="outline" size="default" className="w-full bg-[#B5482A]">
+            <button className="w-full h-10 text-[#FFFFFF] rounded-2xl hover:cursor-pointer hover:bg-[#eea38e] bg-[#B5482A]">
                 Xem chi tiết
-            </Button>
+            </button>
         </article>
         
     );
