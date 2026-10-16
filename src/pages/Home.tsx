@@ -18,27 +18,26 @@ async function getAllProducts() {
     .select()
 
     if (error) throw error;
-
-    const items: ItemProps[] = data;
-    return items;
+    return data;
 }
 
 export default function Home() {
     const [products, setProducts] = useState<ItemProps[]>([]);
     const [loading, setLoading] = useState(true);
-    const [loadError, setLoadError] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         let isActive = true;
+        setLoading(true);
+        setError(null);
 
         getAllProducts()
-            .then((items) => {
-                if (isActive) setProducts(items);
+            .then((data) => {
+                if (isActive) setProducts(data);
             })
-            .catch((error: unknown) => {
+            .catch((err: unknown) => {
                 if (!isActive) return;
-                console.error("Failed to load products:", error);
-                setLoadError(error instanceof Error ? error.message : String(error));
+                setError(err instanceof Error ? err.message: String(err))
             })
             .finally(() => {
                 if (isActive) setLoading(false);
@@ -54,12 +53,12 @@ export default function Home() {
             <Header/>
             <SlideShow />
             <section className="mx-auto w-full max-w-6xl px-5 py-4">
-            <h2 className="mb-4 text-2xl font-bold">Sản phẩm nổi bật</h2>
+            <h2 className="max-sm:text-center px-2 mb-4 text-2xl font-bold">Sản phẩm nổi bật</h2>
             <div className="grid grid-cols-1 justify-items-center gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {loading ? (
                     <p>Đang tải sản phẩm...</p>
-                ) : loadError ? (
-                    <p role="alert">Không thể tải sản phẩm: {loadError}</p>
+                ) : error ? (
+                    <p role="alert">Không thể tải sản phẩm: {error}</p>
                 ) : products.length === 0 ? 
                     <p>Ôi không có gì cả</p>
                 : products.map((product) => 
