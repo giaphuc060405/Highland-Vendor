@@ -5,43 +5,58 @@ import SlideShow from "../components/slideshow"
 import Card from "../components/card"
 import {supabase} from "../utils/supabase"
 
-interface ItemProps {
-    id: string,
-    name: string,
-    price: number,
-    image_url: string
+interface Product {
+    id: string;
+    name: string;
+    price: number;
+    image_url: string;
 }
 
 async function getAllProducts() {
-    const {data, error} = await supabase
-    .from("products")
-    .select()
+    const { data, error } = await supabase
+        .from("products")
+        .select();
 
     if (error) throw error;
-    return data;
+    return data || [];
 }
 
 export default function Home() {
-    const [products, setProducts] = useState<ItemProps[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [productsState, setProductsState] = useState<{
+        products: Product[];
+        loading: boolean;
+        error: string | null;
+    }>({
+        products: [],
+        loading: true,
+        error: null,
+    });
+
+    const { products, loading, error } = productsState;
 
     useEffect(() => {
         let isActive = true;
-        setLoading(true);
-        setError(null);
 
-        getAllProducts()
-            .then((data) => {
-                if (isActive) setProducts(data);
-            })
-            .catch((err: unknown) => {
+        const fetchProducts = async () => {
+            try {
+                const data = await getAllProducts();
                 if (!isActive) return;
-                setError(err instanceof Error ? err.message: String(err))
-            })
-            .finally(() => {
-                if (isActive) setLoading(false);
-            });
+                setProductsState({
+                    products: data || [],
+                    loading: false,
+                    error: null,
+                });
+            } catch (err: unknown) {
+                if (!isActive) return;
+                setProductsState({
+                    products: [],
+                    loading: false,
+                    error: err instanceof Error ? err.message : String(err),
+                });
+            }
+        };
+
+        fetchProducts();
 
         return () => {
             isActive = false;
@@ -52,7 +67,7 @@ export default function Home() {
         <>
             <Header/>
             <SlideShow />
-            <section className="mx-auto w-full max-w-6xl px-5 py-4">
+            <section className="mx-auto w-full max-w-6xl px-5 py-4 bg-[#FAF7F2]">
             <h2 className="max-sm:text-center px-2 mb-4 text-2xl font-bold">Sản phẩm nổi bật</h2>
             <div className="grid grid-cols-1 justify-items-center gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {loading ? (

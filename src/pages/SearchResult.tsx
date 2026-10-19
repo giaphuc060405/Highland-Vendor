@@ -26,44 +26,83 @@ export default function SearchResult() {
     const [searchParams] = useSearchParams();
     const query = searchParams.get("q") || "";
 
-    const [products, setProducts] = useState<Product[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [searchState, setSearchState] = useState<{
+        query: string;
+        products: Product[];
+        error: string | null;
+    }>({
+        query: "",
+        products: [],
+        error: null,
+    });
+
+    const trimmedQuery = query.trim();
+    const loading = Boolean(trimmedQuery && searchState.query !== trimmedQuery);
+    const products = trimmedQuery && searchState.query === trimmedQuery ? searchState.products : [];
+    const error = trimmedQuery && searchState.query === trimmedQuery ? searchState.error : null;
 
     useEffect(() => {
-        let isActive = true;
-
-        if (!query.trim()) {
-            setProducts([]);
-            setLoading(false);
+        if (!trimmedQuery) {
             return;
         }
 
-        setLoading(true);
-        setError(null);
+        let isActive = true;
 
-        searchProducts(query)
-            .then((data) => {
+        const fetchProducts = async () => {
+            try {
+                const data = await searchProducts(trimmedQuery);
                 if (!isActive) return;
-                if (error) throw error;
-                setProducts(data || [])
-            })
-            .catch((err: unknown) => {
+                setSearchState({
+                    query: trimmedQuery,
+                    products: data,
+                    error: null,
+                });
+            } catch (err: unknown) {
                 if (!isActive) return;
-                setError(err instanceof Error ? err.message: String(err))
-            })
-            .finally(() => {
-                if (isActive) setLoading(false);
-            });
-        
+                setSearchState({
+                    query: trimmedQuery,
+                    products: [],
+                    error: err instanceof Error ? err.message : String(err),
+                });
+            }
+        };
+
+        fetchProducts();
+
         return () => {
             isActive = false;
-        }
-    }, [query])
+        };
+    }, [trimmedQuery]);
 
     return (
         <>
             <Header />
+            <main className="mx-auto w-full max-w-6xl px-5 py-4 bg-[#FAF7F2]">
+                {!trimmedQuery ? (
+                    <div>
+                        <p>Hãy nhập từ khóa để tìm kiếm</p>
+                    </div>
+                ) : loading ? (
+                    <p>Đang trả về kết quả...</p>
+                ) : error || products.length === 0 ? (
+                    <div>
+                        <p>Không tìm thấy kết quả</p>
+                        <p>Hãy tìm một từ khóa khác</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 justify-items-center gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        {products.map((product) => (
+                            <Card
+                                key={product.id}
+                                image={product.image_url}
+                                title={product.name}
+                                price={product.price}
+                            />
+                        ))}
+                    </div>
+                )}
+            </main>
+            <Footer />
         </>
-    )
+    );
 }

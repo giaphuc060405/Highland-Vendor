@@ -1,4 +1,4 @@
-import {useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import Icon from "../assets/icon.svg"
 import { ShoppingCart } from 'lucide-react';
@@ -9,9 +9,11 @@ export default function Header() {
     const currentQuery = searchParams.get('q') || '';
     const [keyword, setKeyWord] = useState(currentQuery);
 
-    useEffect(() => {
+    const [prevQuery, setPrevQuery] = useState(currentQuery);
+    if (prevQuery !== currentQuery) {
+        setPrevQuery(currentQuery);
         setKeyWord(currentQuery);
-    }, [currentQuery]);
+    }
 
     const handleSearch = (e: React.ChangeEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -20,8 +22,6 @@ export default function Header() {
             navigate(`/search?q=${encodeURIComponent(trimmed)}`)
         }
     };
-
-
 
 
     return (
