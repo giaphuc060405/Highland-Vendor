@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import Home from '../pages/Home';
+import { MemoryRouter } from 'react-router-dom';
 
 vi.mock('../utils/supabase', () => ({
   supabase: {
@@ -22,7 +23,11 @@ vi.mock('../utils/supabase', () => ({
 
 describe('Home Page', () => {
   it('should render the home page correctly', async () => {
-    render(<Home />);
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>
+    );
     expect(screen.getByText('Sản phẩm nổi bật')).toBeInTheDocument();
 
     const productTitle = await screen.findByText('Cà phê Robusta Gia Lai');
@@ -41,9 +46,13 @@ describe('Home Page', () => {
         data: [],
         error: null,
       }),
-    } as any);
+    } as never);
 
-    render(<Home />);
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>
+    );
     expect(await screen.findByText('Ôi không có gì cả')).toBeInTheDocument();
   });
 
@@ -54,9 +63,13 @@ describe('Home Page', () => {
         data: null,
         error: new Error('Network error'),
       }),
-    } as any);
+    } as never);
 
-    render(<Home />);
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>
+    );
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent(/không thể tải sản phẩm: network error/i);
