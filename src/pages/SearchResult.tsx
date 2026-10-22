@@ -80,14 +80,14 @@ export default function SearchResult() {
             <main className="mx-auto w-full max-w-6xl px-5 py-4 bg-[#FAF7F2]">
                 {!trimmedQuery ? (
                     <div>
-                        <p>Hãy nhập từ khóa để tìm kiếm</p>
+                        <p className = "text-stone-600">Hãy nhập từ khóa để tìm kiếm</p>
                     </div>
                 ) : loading ? (
-                    <p>Đang trả về kết quả...</p>
+                    <p className = "text-stone-600">Đang trả về kết quả</p>
                 ) : error || products.length === 0 ? (
-                    <div>
-                        <p>Không tìm thấy kết quả</p>
-                        <p>Hãy tìm một từ khóa khác</p>
+                    <div className="flex flex-col items-center justify-center text-center py-16">
+                            <h1 className="text-2xl font-bold text-[#2B1F1A]">Không tìm thấy kết quả</h1>
+                            <p className="text-base text-[#6B5E59] max-w-xs">Hãy thử một từ khóa khác</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 justify-items-center gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
