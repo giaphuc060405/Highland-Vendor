@@ -64,7 +64,7 @@ export default function Home() {
     }, []);
 
     return (
-        <>
+        <div className="min-h-screen flex flex-col bg-[#FAF7F2]">
             <Header/>
             <SlideShow />
             <section className="mx-auto w-full max-w-6xl px-5 py-4 bg-[#FAF7F2]">
@@ -77,12 +77,12 @@ export default function Home() {
                 ) : products.length === 0 ? 
                     <p>Ôi không có gì cả</p>
                 : products.map((product) => 
-                    <Card key={product.id} image={product.image_url} 
+                    <Card key={product.id} id={product.id} image={product.image_url} 
                     title={product.name} price={product.price} />
                 )}
             </div>
             </section>
             <Footer />
-        </>
+        </div>
     )
 }

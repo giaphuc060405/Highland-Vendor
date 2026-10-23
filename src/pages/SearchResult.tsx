@@ -75,7 +75,7 @@ export default function SearchResult() {
     }, [trimmedQuery]);
 
     return (
-        <>
+        <div className="min-h-screen flex flex-col bg-[#FAF7F2]">
             <Header />
             <main className="mx-auto w-full max-w-6xl px-5 py-4 bg-[#FAF7F2]">
                 {!trimmedQuery ? (
@@ -94,6 +94,7 @@ export default function SearchResult() {
                         {products.map((product) => (
                             <Card
                                 key={product.id}
+                                id={product.id}
                                 image={product.image_url}
                                 title={product.name}
                                 price={product.price}
@@ -103,6 +104,6 @@ export default function SearchResult() {
                 )}
             </main>
             <Footer />
-        </>
+        </div>
     );
 }
