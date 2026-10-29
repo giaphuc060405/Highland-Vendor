@@ -14,12 +14,10 @@ interface CartStorageData {
     savedAt: number;
 }
 
-
-
 const STORAGE_KEY = 'highland_cart';
 const EXPIRY_TIME_MS = 24 * 60 * 60 * 1000;
 
-function loadCartItemFromStorage(): CartItem[] {
+function loadCartFromStorage(): CartItem[] {
     try {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) return [];
@@ -70,7 +68,7 @@ interface CartStore {
 }
 
 export const useCartStore = create<CartStore>((set, get) => ({
-    items: loadCartItemFromStorage(),
+    items: loadCartFromStorage(),
 
     addToCart: async (item: CartItem) => {
         const { items } = get();
@@ -93,11 +91,80 @@ export const useCartStore = create<CartStore>((set, get) => ({
             saveCartToStorage(newItems);
             set({ items: newItems});
             return true;
-        } catch(err: any) {
-            alert(err.message || 'Không thể thêm vào giỏ hàng');
+        } catch (err) {
+            alert('Không thể thêm vào giỏ hàng');
+            console.error('An error occured: ', err)
             return false;
         }
     },
+
+    removeFromCart: async (itemId: string) => {
+        const { items } = get();
+        const itemToRemove = items.find((i) => i.id === itemId);
+        if (!itemToRemove) return;
+
+        try {
+            await supabase.rpc('increment_product_stock', {p_product_id: itemId});
+            const newItems = items.filter((i) => i.id !== itemId);
+            saveCartToStorage(newItems);
+            set({items: newItems});
+        } catch (err) {
+           console.error('An error occured: ', err)
+        }
+    },
+
+    clearCart: async () => {
+        const { items } = get();
+        await restoreStockForItems(items);
+        localStorage.removeItem(STORAGE_KEY);
+        set({items: []});
+    },
+
+    initCartWatcher: () => {
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === STORAGE_KEY && !e.newValue && e.oldValue) {
+                try {
+                    const oldData: CartStorageData = JSON.parse(e.oldValue);
+                    if (oldData.items?.length) {
+                        restoreStockForItems(oldData.items);
+                    }
+                } catch (err) {
+                    console.error("An error occured: ",err)
+                }
+                set({items: []});
+            }
+        }
+
+        const intervalId = setInterval(() => {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            const currentItems = get().items;
+
+            if (!raw && currentItems.length > 0) {
+                restoreStockForItems(currentItems);
+                set({ items: []});
+                return;
+            }
+
+            if (raw) {
+                try {
+                    const parsed: CartStorageData = JSON.parse(raw);
+                    if (Date.now() - parsed.savedAt > EXPIRY_TIME_MS) {
+                        restoreStockForItems(parsed.items);
+                        localStorage.removeItem(STORAGE_KEY);
+                        set({ items: []});
+                    }
+                } catch (err) {
+                    console.error('An error occured: ', err)
+                }
+            }
+        }, 10000);
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            clearInterval(intervalId);
+        }
+    }
 
 
 }))
