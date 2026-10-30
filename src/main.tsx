@@ -5,11 +5,13 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import Home from './pages/Home'
 import SearchResult from './pages/SearchResult'
 import ProductDetails from './pages/ProductDetails'
+import Cart from './pages/Cart'
 
 const router = createBrowserRouter([
   {path: '/', element: <Home/>},
   {path: 'search', element: <SearchResult/>},
-  {path: 'product/:id', element: <ProductDetails/>}
+  {path: 'product/:id', element: <ProductDetails/>},
+  {path: 'cart', element: <Cart />}
 ]);
 
 createRoot(document.getElementById('root')!).render(

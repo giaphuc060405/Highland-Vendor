@@ -79,7 +79,7 @@ export default function ProductDetail() {
     return (
         <div className="min-h-screen flex flex-col bg-[#FAF7F2]">
             <Header/>
-            <main className = "flex flex-1 flex-col items-center justify-center px-4 py-6 bg-[#FAF7F2]">
+            <main className = "flex flex-1 flex-col items-center justify-center px-4 py-6">
                 {loading ? (
                     <p className = "text-stone-600">Đang tải sản phẩm...</p>) : error || !product ? (
                         <div className="flex flex-col items-center justify-center text-center py-16">
