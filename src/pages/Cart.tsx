@@ -11,7 +11,7 @@ export default function Cart() {
     return (
         <div className="min-h-screen flex flex-col bg-[#FAF7F2]">
             <Header/>
-            <main className="flex flex-1 flex-col max-w-md w-full mx-auto px-4 py-8">
+            <main className="flex flex-1 flex-col max-w-md md:max-w-dvh w-full mx-auto px-4 py-8">
                 <h1 className="text-3xl font-bold text-center text-[#2B1F1A] mb-8">Giỏ hàng của bạn</h1>
                 {items.length === 0 ? (
                     <div className="flex flex-col items-center justify-center text-center py-16 gap-5">

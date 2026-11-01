@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { supabase } from "@/utils/supabase";
+import { useCartStore } from "@/store/useCartStore";
 
 export interface Product {
     id: string;
@@ -27,6 +28,7 @@ async function getProductById(id: string): Promise<Product | null> {
 
 export default function ProductDetail() {
     const { id } = useParams<{id: string}>();
+    const { items: cartItems, addToCart } = useCartStore();
 
     const [productState, setProductState] = useState<{
             product: Product | null;
@@ -74,7 +76,65 @@ export default function ProductDetail() {
         return () => {
             isActive = false;
         }
-    }, [id])
+    }, [id]);
+
+    const isCartFull = cartItems.length >= 2;
+    const isAlreadyInCart = product ? cartItems.some((item) => item.id === product.id) : false;
+
+    const handleAddToCart = async () => {
+        if (!product || product.stock <=0) return;
+
+        const success = await addToCart({
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            image_url: product.image_url,
+            description: product.description
+        });
+
+        if (success) {
+            setProductState((prev) =>
+                prev.product ? {...prev, product: { ...prev.product, stock: prev.product.stock - 1}} : prev
+            );
+        }
+    };
+
+    const renderCartButton = () => {
+        if (isCartFull) {
+            return (
+                <button type="button" disabled className="w-full py-3 rounded-lg bg-[#E8D5CC]
+                text-[#7C6E68] font-medium cursor-not-allowed">
+                    Giỏ hàng đã có 2 món 
+                </button>
+            );
+        }
+
+        if (isAlreadyInCart) {
+            return (
+                <button type="button" disabled className="w-full py-3 rounded-lg bg-[#E8D5CC]
+                text-[#7C6E68] font-medium cursor-not-allowed">
+                    Đã thêm vào giỏ
+                </button>
+            );
+        }
+
+        if (product && product.stock <=0) {
+            return (
+                <button type="button" disabled className="w-full py-3 rounded-lg bg-[#E8D5CC]
+                text-[#7C6E68] font-medium cursor-not-allowed">
+                    Hết hàng
+                </button>
+            );
+        }
+
+        return (
+            <button type="button" onClick={handleAddToCart}
+            className="w-full py-3 rounded-lg bg-[#B5482A] hover:bg-[#9d3c22] text-white
+            font-medium cursor-pointer transition-colors">
+                Thêm vào giỏ
+            </button>
+        )
+    }
 
     return (
         <div className="min-h-screen flex flex-col bg-[#FAF7F2]">
@@ -97,15 +157,7 @@ export default function ProductDetail() {
                                 <p className="text-xl font-bold text-[#2B1F1A]">{Number(product.price).toLocaleString("vi-Vn")} đ</p>
                                 <p className="text-base font-normal">Số lượng còn lại: {product.stock}</p>
                                 <p className="text-base font-normal">{product.description}</p>
-                                <button type="button" disabled={product.stock <=0} 
-                                    className={`w-full py-3 rounded-lg text-white font-medium 
-                                    transition-colors ${
-                                    product.stock > 0
-                                    ? "bg-[#B5482A] hover:bg-[#9d3c22] cursor-pointer"
-                                : "bg-gray-400 cursor-not-allowed"
-                                }`}>
-                                    {product.stock > 0 ? "Thêm vào giỏ" : "Hết hàng"}
-                                </button>
+                                {renderCartButton()}
                             </div>
                         </article>
                     )
