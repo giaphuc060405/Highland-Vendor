@@ -100,11 +100,11 @@ export default function ProductDetail() {
     };
 
     const renderCartButton = () => {
-        if (isCartFull) {
+        if (product && product.stock <=0) {
             return (
                 <button type="button" disabled className="w-full py-3 rounded-lg bg-[#E8D5CC]
                 text-[#7C6E68] font-medium cursor-not-allowed">
-                    Giỏ hàng đã có 2 món 
+                    Hết hàng
                 </button>
             );
         }
@@ -118,11 +118,11 @@ export default function ProductDetail() {
             );
         }
 
-        if (product && product.stock <=0) {
+        if (isCartFull) {
             return (
                 <button type="button" disabled className="w-full py-3 rounded-lg bg-[#E8D5CC]
                 text-[#7C6E68] font-medium cursor-not-allowed">
-                    Hết hàng
+                    Giỏ hàng đã có 2 món 
                 </button>
             );
         }
