@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from "react-router-dom";
 import Cart from '@/pages/Cart';
 import { useCartStore } from "@/store/useCartStore";
+import userEvent from '@testing-library/user-event'
 
 vi.mock('@/utils/supabase', () => ({
     supabase: {
@@ -31,4 +32,32 @@ describe('Cart Page', () => {
         expect(screen.getByText('Hãy thêm vào')).toBeInTheDocument();
         expect(screen.queryByRole('button', {name: /thanh toán/i})).not.toBeInTheDocument();
     });
+
+    it('renders cart items and calculates total amount correctly', () => {
+        useCartStore.setState({
+            items: [
+                {id: "1", name: "Cà phê Robusta Gia Lai", price: 150000, image_url: "https://example.com/item1.jpg"},
+                {id: "2", name: "Trà Oolong Bảo Lộc", price: 200000, image_url: "https://example.com/item2.jpg"},
+            ]
+        });
+
+        render(
+            <MemoryRouter>
+                <Cart />
+            </MemoryRouter>
+        )
+
+        expect(screen.getByText('Cà phê Robusta Gia Lai')).toBeInTheDocument();
+        expect(screen.getByText(/150\.000/)).toBeInTheDocument();
+        expect(screen.getByText('Trà Oolong Bảo Lộc')).toBeInTheDocument();
+        expect(screen.getByText(/200\.000/)).toBeInTheDocument();
+
+        expect(screen.getByText('Thành tiền:')).toBeInTheDocument();
+        expect(screen.getByText(/350\.000/)).toBeInTheDocument();
+         expect(screen.getByRole('button', { name: /thanh toán/i})).toBeInTheDocument();
+    });
+
+    it('removes an item cart when clicking the delete button', async () => {
+        const user = userEvent 
+    })
 })
