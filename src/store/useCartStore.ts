@@ -65,6 +65,7 @@ interface CartStore {
     removeFromCart: (itemId: string) => Promise<void>;
     clearCart: () => Promise<void>;
     initCartWatcher: () => () => void;
+    clearCartAfterCheckout: () => void;
 }
 
 export const useCartStore = create<CartStore>((set, get) => ({
@@ -164,7 +165,10 @@ export const useCartStore = create<CartStore>((set, get) => ({
             window.removeEventListener('storage', handleStorageChange);
             clearInterval(intervalId);
         }
+    },
+
+    clearCartAfterCheckout: () => {
+        localStorage.removeItem(STORAGE_KEY);
+        set({items: []});
     }
-
-
 }))
