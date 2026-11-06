@@ -6,12 +6,14 @@ import Home from './pages/Home'
 import SearchResult from './pages/SearchResult'
 import ProductDetails from './pages/ProductDetails'
 import Cart from './pages/Cart'
+import Checkout from './pages/Checkout'
 
 const router = createBrowserRouter([
   {path: '/', element: <Home/>},
   {path: 'search', element: <SearchResult/>},
   {path: 'product/:id', element: <ProductDetails/>},
-  {path: 'cart', element: <Cart />}
+  {path: 'cart', element: <Cart />},
+  {path: 'checkout', element: <Checkout />}
 ]);
 
 createRoot(document.getElementById('root')!).render(

@@ -57,18 +57,17 @@ export default function Checkout() {
             .single();
 
             if (orderError || !orderData) throw orderError;
-
+            
             const orderItems = items.map(item => ({
                 order_id: orderData.id,
                 product_id: item.id,
                 quantity: 1,
                 price: item.price
             }));
-
+            
             const { error: itemsError } = await supabase
-            .from('order_items')
-            .insert(orderItems);
-
+                .from('order_items')
+                .insert(orderItems);
             if (itemsError) throw itemsError;
 
             clearCartAfterCheckout();
@@ -85,7 +84,7 @@ export default function Checkout() {
         <div className="min-h-screen flex flex-col bg-[#FAF7F2]">
             <Header />
             {status === 'idle' && (
-                <main className="flex flex-1 flex-col max-w-md w-full mx-auto px-4 py-8">
+                <main className="flex flex-1 flex-col max-w-md md:max-w-dvh w-full mx-auto px-4 py-8">
                     <h1 className="text-3xl font-bold text-center text-[#2B1F1A]">Cổng thanh toán</h1>
                     <form onSubmit={handleSubmitOrder} className="flex flex-col flex-1">
                         <div className="mb-4">
@@ -129,10 +128,41 @@ export default function Checkout() {
                             </div>
                         </div>
 
-                        
+                        <hr className="border-t border-stone-400 my-4" />
+
+                        <div className="flex justify-between items-center mb-6">
+                            <span className="text-base font-bold text-[#2B1F1A]">Thành tiền:</span>
+                            <span className="text-xl font-bold text-[#2B1F1A]">{totalAmount.toLocaleString("vi-VN")} đ</span>
+                        </div>
+
+                        <button type="submit" disabled={isSubmitting} className="w-full py-3 bg-[#B5482A]
+                        hover:bg-[#9d3c22] disabled:opacity-50 text-white font-medium rounded-lg cursor-pointer
+                        transition-colors text-center">
+                            {isSubmitting ? "Đang xử lý..." : "Đặt hàng"}
+                        </button>
                     </form>
                 </main>
             )}
+
+            {status === 'success' && (
+                <main className="flex flex-1 flex-col items-center justify-center text-center px-4 py-16">
+                    <h1 className= "text-2xl md:text-3xl font-bold text-[#2B1F1A] mb-4">
+                        Đơn hàng của bạn đã đặt thành công
+                    </h1>
+                    <p className="text-base text-[#6B5E59]">Bạn có thể rời khỏi trang này</p>
+                </main>
+            )}
+
+            {status === 'failed' && (
+                <main className="flex flex-1 flex-col items-center justify-center text-center px-4 py-16">
+                    <h1 className= "text-2xl md:text-3xl font-bold text-[#2B1F1A] mb-4">
+                        Ôi! Đã có vấn đề xảy ra!
+                    </h1>
+                    <p className="text-base text-[#6B5E59]">Xin vui lòng thử lại trong vài phút nữa</p>
+                </main>
+            )}
+
+            <Footer />
         </div>
     )
 

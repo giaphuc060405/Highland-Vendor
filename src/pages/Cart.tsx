@@ -2,10 +2,11 @@ import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { useCartStore } from "@/store/useCartStore";
 import { Trash } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function Cart() {
     const { items, removeFromCart } = useCartStore();
-    
+    const navigate = useNavigate();
     const totalAmount = items.reduce((sum, item) => sum + Number(item.price || 0), 0);
 
     return (
@@ -43,7 +44,7 @@ export default function Cart() {
                             <span className="text-base font-bold text=[#2B1F1A]">Thành tiền:</span>
                             <span className="text-xl font-bold text=[#2B1F1A]">{totalAmount.toLocaleString('vi-VN')}</span>
                         </div>
-                        <button type="button" className="w-full py-3 bg-[#B5482A] hover:bg-[#9d3c22]
+                        <button type="button" onClick={() => navigate('/checkout')}className="w-full py-3 bg-[#B5482A] hover:bg-[#9d3c22]
                         text-white font-medium rounded-lg cursor-pointer transition-colors text-center">
                             Thanh toán
                         </button>
