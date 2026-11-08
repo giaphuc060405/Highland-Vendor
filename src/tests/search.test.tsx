@@ -71,7 +71,7 @@ describe('Search Page',() => {
             renderWithRouter(['/search?q=khong-ton-tai']);
 
             expect(await screen.findByText('Không tìm thấy kết quả')).toBeInTheDocument();
-            expect(screen.getByText('Hãy tìm một từ khóa khác')).toBeInTheDocument();
+            expect(screen.getByText('Hãy thử một từ khóa khác')).toBeInTheDocument();
         });
 
     it('shows the notification when there is a query error from Supabase', 
@@ -101,6 +101,6 @@ describe('Search Page',() => {
         } as never);
         renderWithRouter(['/search?q=Robusta']);
 
-        expect(screen.getByText('Đang trả về kết quả...')).toBeInTheDocument();
+        expect(screen.getByText('Đang trả về kết quả')).toBeInTheDocument();
     })
 })
