@@ -48,7 +48,6 @@ src
 |    |_supabase.ts
 |_index.css
 |_main.tsx
-|_env.example
 ```
 
 ## Hướng dẫn cài đặt
