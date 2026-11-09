@@ -6,7 +6,34 @@ Highland-Vendor là một web e-commerce chuyên bán đặc sản của Tây Ng
 
 ## Video Demo
 
+[Bấm vào đây để  xem video](https://1drv.ms/v/c/45D6AD3AA5C3439C/IQCzXYp5iTH8RKDKgPyHUnRCAfc0Knu8wMnQ4foTHD1TqXg)
 ## Ảnh
+
+<figure>
+    <img src="./public/Home.png" alt="Home"/>
+    <figcaption style="text-align:center">Trang chủ</figcaption>
+ </figure>
+
+ <figure>
+    <img src="./public/Search.png" alt="Search"/>
+    <figcaption style="text-align:center">Kết quả tìm kiếm</figcaption>
+ </figure>
+
+ <figure>
+    <img src="./public/Product.png" alt="Product"/>
+    <figcaption style="text-align:center">Chi tiết sản phẩm</figcaption>
+ </figure>
+
+ <figure>
+    <img src="./public/Cart.png" alt="Cart"/>
+    <figcaption style="text-align:center">Giỏ hàng</figcaption>
+ </figure>
+
+ <figure>
+    <img src="./public/Checkout.png" alt="Checkout"/>
+    <figcaption style="text-align:center">Thanh toán</figcaption>
+ </figure>
+
 
 ## Thư viện sử dụng
 - React 
