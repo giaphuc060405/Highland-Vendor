@@ -1,19 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
-import slide1 from "../assets/slideshow/slide1.jpg";
-import slide2 from "../assets/slideshow/slide2.jpg";
-import slide3 from "../assets/slideshow/slide3.jpg";
-import slide4 from "../assets/slideshow/slide4.jpg";
+import slide1Desktop from "../assets/slideshow/slide1-desktop.webp";
+import slide1Mobile from "../assets/slideshow/slide1-mobile.webp";
+import slide2Desktop from "../assets/slideshow/slide2-desktop.webp";
+import slide2Mobile from "../assets/slideshow/slide2-mobile.webp";
 
 interface SlideItem {
   id: number;
-  url: string;
+  desktopUrl: string;
+  mobileUrl: string;
 }
 
 const images: SlideItem[] = [
-  { id: 1, url: slide1 },
-  { id: 2, url: slide2 },
-  { id: 3, url: slide3 },
-  { id: 4, url: slide4 },
+  { id: 1, desktopUrl: slide1Desktop, mobileUrl: slide1Mobile },
+  { id: 2, desktopUrl: slide2Desktop, mobileUrl: slide2Mobile },
 ];
 
 export default function SlideShow() {
@@ -41,11 +40,15 @@ export default function SlideShow() {
               index === currentIndex ? "opacity-100 z-10" : "opacity-0 z-0"
             }`}
           >
-            <img
-              src={slide.url}
-              alt={`Slide ${index + 1}`}
-              className="w-full h-full object-cover"
-            />
+            <picture className="block w-full h-full">
+              <source media="(min-width: 768px)" srcSet={slide.desktopUrl} />
+              <img
+                src={slide.mobileUrl}
+                alt={`Slide ${index + 1}`}
+                className="w-full h-full object-cover"
+                fetchPriority="high"
+              />
+            </picture>
              <div className="absolute inset-0 bg-black/60" />
             
           </div>
