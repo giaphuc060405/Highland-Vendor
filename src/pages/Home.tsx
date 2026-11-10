@@ -12,14 +12,12 @@ interface Product {
     image_url: string;
 }
 
-async function getAllProducts() {
-    const { data, error } = await supabase
-        .from("products")
-        .select();
-
+const productsPromise: Promise<Product[]> = Promise.resolve(
+    supabase.from("products").select()
+).then(({ data, error }) => {
     if (error) throw error;
-    return data || [];
-}
+    return (data || []) as Product[];
+});
 
 export default function Home() {
     const [productsState, setProductsState] = useState<{
@@ -37,30 +35,21 @@ export default function Home() {
     useEffect(() => {
         let isActive = true;
 
-        const fetchProducts = async () => {
-            try {
-                const data = await getAllProducts();
+        productsPromise
+            .then((data) => {
                 if (!isActive) return;
-                setProductsState({
-                    products: data || [],
-                    loading: false,
-                    error: null,
-                });
-            } catch (err: unknown) {
+                setProductsState({ products: data, loading: false, error: null });
+            })
+            .catch((err: unknown) => {
                 if (!isActive) return;
                 setProductsState({
                     products: [],
                     loading: false,
                     error: err instanceof Error ? err.message : String(err),
                 });
-            }
-        };
+            });
 
-        fetchProducts();
-
-        return () => {
-            isActive = false;
-        };
+        return () => { isActive = false; };
     }, []);
 
     return (

@@ -11,6 +11,9 @@ export default defineConfig({
       '@': path.resolve(fileURLToPath(new URL('.', import.meta.url)), 'src'),
     },
   },
+  build: {
+    sourcemap: true,
+  },
   plugins: [
     tailwindcss(),
     react()],
