@@ -37,8 +37,8 @@ export default function Header() {
                 onChange={(e) => setKeyWord(e.target.value)}
                 className="w-full bg-[#EFE8DC] rounded-2xl px-2 py-1 text-[#2B1F1A]"/>
             </form>
-            <Link to="/cart" className="relative shrink-0" aria-labelledby='Cart'>
-                <ShoppingCart className="text-amber-50 w-8 h-10 shrink-0 cursor-pointer" />
+            <Link to="/cart" className="relative shrink-0" aria-label="Giỏ hàng">
+                <ShoppingCart className="text-amber-50 w-8 h-10 shrink-0 cursor-pointer" aria-hidden="true" />
             </Link>
         </header>
     )
