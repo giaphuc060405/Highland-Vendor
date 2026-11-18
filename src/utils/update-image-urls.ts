@@ -1,9 +1,3 @@
-/**
- * One-time migration script: updates image_url in the products table
- * from .jpg → .webp to match the files already converted in Supabase Storage.
- *
- * Run with: npx tsx src/utils/update-image-urls.ts
- */
 import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
 
