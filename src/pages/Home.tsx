@@ -4,6 +4,7 @@ import Header from "../components/header"
 import SlideShow from "../components/slideshow"
 import Card from "../components/card"
 import {supabase} from "../utils/supabase"
+import ProductCardSkeleton from "@/components/productCardSkeleton"
 
 interface Product {
     id: string;
@@ -60,7 +61,9 @@ export default function Home() {
             <h2 className="max-sm:text-center px-2 mb-4 text-2xl font-bold">Sản phẩm nổi bật</h2>
             <div className="grid grid-cols-1 justify-items-center gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {loading ? (
-                    <p>Đang tải sản phẩm...</p>
+                    Array.from({length: 8}).map((_, index) => (
+                        <ProductCardSkeleton key={index} />
+                    ))
                 ) : error ? (
                     <p role="alert">Không thể tải sản phẩm: {error}</p>
                 ) : products.length === 0 ? 

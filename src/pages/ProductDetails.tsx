@@ -4,6 +4,7 @@ import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { supabase } from "@/utils/supabase";
 import { useCartStore } from "@/store/useCartStore";
+import ProductDetailSkeleton from "@/components/productDetailSkeleton";
 
 export interface Product {
     id: string;
@@ -141,7 +142,7 @@ export default function ProductDetail() {
             <Header/>
             <main className = "flex flex-1 flex-col items-center justify-center px-4 py-6">
                 {loading ? (
-                    <p className = "text-stone-600">Đang tải sản phẩm...</p>) : error || !product ? (
+                    <ProductDetailSkeleton />) : error || !product ? (
                         <div className="flex flex-col items-center justify-center text-center py-16">
                             <h1 className="text-2xl font-bold text-[#2B1F1A]">Sản phẩm không tồn tại</h1>
                             <p className="text-base text-[#6B5E59] max-w-xs">Có thể sản phẩm đã bị xóa hay không có trên hệ thống</p>
