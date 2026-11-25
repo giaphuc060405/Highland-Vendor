@@ -1,57 +1,21 @@
-import { useEffect, useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import Footer from "../components/footer"
 import Header from "../components/header"
 import SlideShow from "../components/slideshow"
 import Card from "../components/card"
-import {supabase} from "../utils/supabase"
+import { fetchProducts } from "@/services/productService"
 import ProductCardSkeleton from "@/components/productCardSkeleton"
 
-interface Product {
-    id: string;
-    name: string;
-    price: number;
-    image_url: string;
-}
-
-const productsPromise: Promise<Product[]> = Promise.resolve(
-    supabase.from("products").select()
-).then(({ data, error }) => {
-    if (error) throw error;
-    return (data || []) as Product[];
-});
 
 export default function Home() {
-    const [productsState, setProductsState] = useState<{
-        products: Product[];
-        loading: boolean;
-        error: string | null;
-    }>({
-        products: [],
-        loading: true,
-        error: null,
-    });
-
-    const { products, loading, error } = productsState;
-
-    useEffect(() => {
-        let isActive = true;
-
-        productsPromise
-            .then((data) => {
-                if (!isActive) return;
-                setProductsState({ products: data, loading: false, error: null });
-            })
-            .catch((err: unknown) => {
-                if (!isActive) return;
-                setProductsState({
-                    products: [],
-                    loading: false,
-                    error: err instanceof Error ? err.message : String(err),
-                });
-            });
-
-        return () => { isActive = false; };
-    }, []);
+    const {
+        data: products = [],
+        isLoading: loading,
+        error,
+    } = useQuery({
+        queryKey: ['products'],
+        queryFn: fetchProducts
+    })
 
     return (
         <div className="min-h-screen flex flex-col bg-[#FAF7F2]">
@@ -60,17 +24,15 @@ export default function Home() {
             <section className="mx-auto w-full max-w-6xl px-5 py-4 bg-[#FAF7F2]">
             <h2 className="max-sm:text-center px-2 mb-4 text-2xl font-bold">Sản phẩm nổi bật</h2>
             <div className="grid grid-cols-1 justify-items-center gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {error && (
+                <div role="alert" className="col-span-full w-full p-4 bg-red-100 text-red-700 rounded-md">
+                    Không thể tải sản phẩm: {error instanceof Error ? error.message : "Đã có lỗi xảy ra"}
+                </div>
+                )}
                 {loading ? (
-                    Array.from({length: 8}).map((_, index) => (
-                        <ProductCardSkeleton key={index} />
-                    ))
-                ) : error ? (
-                    <p role="alert">Không thể tải sản phẩm: {error}</p>
-                ) : products.length === 0 ? 
-                    <p>Ôi không có gì cả</p>
-                : products.map((product) => 
-                    <Card key={product.id} id={product.id} image={product.image_url} 
-                    title={product.name} price={product.price} />
+                    [...Array(8)].map((_, i) => <ProductCardSkeleton key={i} />)
+                ) : (
+                    products.map((p) => <Card key={p.id} id={p.id} image={p.image_url} title={p.name} price={p.price} />)
                 )}
             </div>
             </section>

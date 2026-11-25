@@ -1,141 +1,75 @@
-import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchProductById, type Product } from "@/services/productService";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
-import { supabase } from "@/utils/supabase";
-import { useCartStore } from "@/store/useCartStore";
+import { useCartStore } from "@/store/useCartStore"; 
 import ProductDetailSkeleton from "@/components/productDetailSkeleton";
 
-export interface Product {
-    id: string;
-    name: string;
-    description: string;
-    price: number;
-    stock: number;
-    image_url: string;
-}
-
-
-async function getProductById(id: string): Promise<Product | null> {
-    const { data, error } = await supabase
-    .from("products")
-    .select("*")
-    .eq("id", id)
-    .maybeSingle();
-
-    if (error) throw error;
-    return data;
-}
 
 export default function ProductDetail() {
-    const { id } = useParams<{id: string}>();
+    const { id } = useParams<{ id: string }>();
+    const queryClient = useQueryClient();
     const { items: cartItems, addToCart } = useCartStore();
-
-    const [productState, setProductState] = useState<{
-            product: Product | null;
-            loading: boolean;
-            error: string | null;
-        }>({
-            product: null,
-            loading: true,
-            error: null,
-        });
-    
-    const { product, loading, error } = productState
-    
-    useEffect(() => {
-        let isActive = true;
-
-        if (!id) {
-            return () => {
-                isActive = false;
-            };
-        }
-
-        const fetchProductById = async () => {
-            try {
-                const data = await getProductById(id);
-                if (!isActive) return;
-                setProductState({
-                    product: data || null,
-                    loading: false,
-                    error: null
-                })
-            } catch (err: unknown) {
-                if (!isActive) return;
-                setProductState({
-                    product: null,
-                    loading: false,
-                    error: err instanceof Error ? err.message : String(err),
-                });
-
-            }
-        };
-
-        fetchProductById();
-
-        return () => {
-            isActive = false;
-        }
-    }, [id]);
-
+    const {
+        data: product,
+        isLoading: loading, 
+        error,
+    } = useQuery({
+        queryKey: ['products', id],
+        queryFn: () => fetchProductById(id!),
+        enabled: !!id,
+    });
     const isCartFull = cartItems.length >= 2;
     const isAlreadyInCart = product ? cartItems.some((item) => item.id === product.id) : false;
-
     const handleAddToCart = async () => {
-        if (!product || product.stock <=0) return;
-
+        if (!product || (product.stock ?? 0) <= 0) return;
         const success = await addToCart({
             id: product.id,
             name: product.name,
             price: product.price,
             image_url: product.image_url,
-            description: product.description
+            description: product.description,
         });
-
         if (success) {
-            setProductState((prev) =>
-                prev.product ? {...prev, product: { ...prev.product, stock: prev.product.stock - 1}} : prev
-            );
+            queryClient.setQueryData<Product | null>(['products', id], (old) => {
+                if (!old) return old;
+                return { ...old, stock: old.stock - 1 };
+            });
         }
     };
-
     const renderCartButton = () => {
-        if (product && product.stock <=0) {
+        if (product && product.stock <= 0) {
             return (
-                <button type="button" disabled className="w-full py-3 rounded-lg bg-[#E8D5CC]
-                text-[#7C6E68] font-medium cursor-not-allowed">
+                <button type="button" disabled className="w-full py-3 rounded-lg bg-[#E8D5CC] text-[#7C6E68] font-medium cursor-not-allowed">
                     Hết hàng
                 </button>
             );
         }
-
         if (isAlreadyInCart) {
             return (
-                <button type="button" disabled className="w-full py-3 rounded-lg bg-[#E8D5CC]
-                text-[#7C6E68] font-medium cursor-not-allowed">
+                <button type="button" disabled className="w-full py-3 rounded-lg bg-[#E8D5CC] text-[#7C6E68] font-medium cursor-not-allowed">
                     Đã thêm vào giỏ
                 </button>
             );
         }
-
         if (isCartFull) {
             return (
-                <button type="button" disabled className="w-full py-3 rounded-lg bg-[#E8D5CC]
-                text-[#7C6E68] font-medium cursor-not-allowed">
+                <button type="button" disabled className="w-full py-3 rounded-lg bg-[#E8D5CC] text-[#7C6E68] font-medium cursor-not-allowed">
                     Giỏ hàng đã có 2 món 
                 </button>
             );
         }
-
         return (
-            <button type="button" onClick={handleAddToCart}
-            className="w-full py-3 rounded-lg bg-[#B5482A] hover:bg-[#9d3c22] text-white
-            font-medium cursor-pointer transition-colors">
+            <button 
+                type="button" 
+                onClick={handleAddToCart}
+                className="w-full py-3 rounded-lg bg-[#B5482A] hover:bg-[#9d3c22] text-white font-medium cursor-pointer transition-colors"
+            >
                 Thêm vào giỏ
             </button>
-        )
-    }
+        );
+    };
 
     return (
         <div className="min-h-screen flex flex-col bg-[#FAF7F2]">

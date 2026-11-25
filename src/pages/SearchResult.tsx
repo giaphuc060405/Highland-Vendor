@@ -1,84 +1,30 @@
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import Header from "../components/header";
 import Footer from "@/components/footer";
 import Card from "../components/card";
-import { supabase } from "@/utils/supabase";
+import { searchProducts } from "@/services/productService";
 
-interface Product {
-    id: string;
-    name: string;
-    price: number;
-    image_url: string;
-}
-
-async function searchProducts(query: string) {
-    const { data, error} = await supabase
-        .from('products')
-        .select('*')
-        .ilike('name', `%${query.trim()}%`)
-    
-    if (error) throw error;
-    return data || [];
-}
 
 export default function SearchResult() {
     const [searchParams] = useSearchParams();
-    const query = searchParams.get("q") || "";
+    const query = (searchParams.get("q") || "").trim();
 
-    const [searchState, setSearchState] = useState<{
-        query: string;
-        products: Product[];
-        error: string | null;
-    }>({
-        query: "",
-        products: [],
-        error: null,
-    });
-
-    const trimmedQuery = query.trim();
-    const loading = Boolean(trimmedQuery && searchState.query !== trimmedQuery);
-    const products = trimmedQuery && searchState.query === trimmedQuery ? searchState.products : [];
-    const error = trimmedQuery && searchState.query === trimmedQuery ? searchState.error : null;
-
-    useEffect(() => {
-        if (!trimmedQuery) {
-            return;
-        }
-
-        let isActive = true;
-
-        const fetchProducts = async () => {
-            try {
-                const data = await searchProducts(trimmedQuery);
-                if (!isActive) return;
-                setSearchState({
-                    query: trimmedQuery,
-                    products: data,
-                    error: null,
-                });
-            } catch (err: unknown) {
-                if (!isActive) return;
-                setSearchState({
-                    query: trimmedQuery,
-                    products: [],
-                    error: err instanceof Error ? err.message : String(err),
-                });
-            }
-        };
-
-        fetchProducts();
-
-        return () => {
-            isActive = false;
-        };
-    }, [trimmedQuery]);
+    const {
+        data: products = [],
+        isLoading: loading,
+        error,
+    } = useQuery({
+        queryKey: ['products', 'search', query],
+        queryFn: () => searchProducts(query),
+        enabled: !!query,
+    })
 
     return (
         <div className="min-h-screen flex flex-col bg-[#FAF7F2]">
             <Header />
             <main className="mx-auto w-full max-w-6xl px-5 py-4 bg-[#FAF7F2]">
-                {!trimmedQuery ? (
+                {!query ? (
                     <div>
                         <p className = "text-stone-600">Hãy nhập từ khóa để tìm kiếm</p>
                     </div>
@@ -91,13 +37,13 @@ export default function SearchResult() {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 justify-items-center gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                        {products.map((product) => (
+                        {products.map((p) => (
                             <Card
-                                key={product.id}
-                                id={product.id}
-                                image={product.image_url}
-                                title={product.name}
-                                price={product.price}
+                                key={p.id}
+                                id={p.id}
+                                image={p.image_url}
+                                title={p.name}
+                                price={p.price}
                             />
                         ))}
                     </div>

@@ -1,16 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { useCartStore } from "@/store/useCartStore";
-import { supabase } from "@/utils/supabase";
+import { createOrder } from "@/services/orderService";
 
 export default function Checkout() {
     const navigate = useNavigate();
     const { items, clearCartAfterCheckout } = useCartStore();
-
-    const [status, setStatus] = useState<'idle' | 'success' | 'failed'>('idle');
-    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -19,97 +17,122 @@ export default function Checkout() {
         address: ''
     });
 
+    const [errors, setErrors] = useState({
+        name: '',
+        email: '',
+        phone: '',
+        address: ''
+    });
+
+    const validateField = (field: keyof typeof formData, value: string): string => {
+        const trimmed = value.trim();
+        switch (field) {
+            case 'name':
+                return trimmed.length < 5 ? 'Phải có ít nhất 5 ký tự' : '';
+            case 'email':
+                return !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed) ? 'Email sai định dạng: @email.com' : '';
+            case 'phone':
+                return !/^\d{10,11}$/.test(trimmed) ? 'Phải có 10 hoặc 11 chữ số' : '';
+            case 'address':
+                return trimmed.length < 5 ? 'Phải có ít nhất 5 ký tự' : '';
+        }
+    };
+
+    const checkoutMutation = useMutation({
+        mutationFn: createOrder,
+        onError: (error) => {
+            console.error('Error while making the order: ', error);
+        }
+    });
+
     useEffect(() => {
-        if (status === 'idle') {
+        if (checkoutMutation.isSuccess) {
+            clearCartAfterCheckout();
+        }
+    }, [checkoutMutation.isSuccess, clearCartAfterCheckout]);
+
+    useEffect(() => {
+        if (!checkoutMutation.isSuccess) {
             const rawStorage = localStorage.getItem('highland_cart');
             const hasItemsInStorage = rawStorage ? JSON.parse(rawStorage)?.items?.length > 0 : false;
-
             if (items.length === 0 && !hasItemsInStorage) {
-                navigate('/', { replace: true});
+                navigate('/', { replace: true });
             }
         }
-    }, [items, navigate, status]);
+    }, [items, navigate, checkoutMutation.isSuccess]);
 
     const totalAmount = items.reduce((sum, item) => sum + Number(item.price || 0), 0);
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value}));
+        const field = name as keyof typeof formData;
+        setFormData(prev => ({ ...prev, [field]: value }));
+        if (errors[field]) {
+            setErrors(prev => ({ ...prev, [field]: validateField(field, value) }));
+        }
     };
 
-    const handleSubmitOrder = async (e: React.SubmitEvent) => {
+    const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        const field = name as keyof typeof formData;
+        setErrors(prev => ({ ...prev, [field]: validateField(field, value) }));
+    };
+
+    const handleSubmitOrder = (e: React.SubmitEvent) => {
         e.preventDefault();
-        if (items.length === 0 || isSubmitting) return;
+        const nextErrors = {
+            name: validateField('name', formData.name),
+            email: validateField('email', formData.email),
+            phone: validateField('phone', formData.phone),
+            address: validateField('address', formData.address)
+        };
+        setErrors(nextErrors);
 
-        setIsSubmitting(true);
-
-        try {
-            const { data: orderData, error: orderError } = await supabase
-            .from('orders')
-            .insert({
-                customer_name: formData.name.trim(),
-                customer_email: formData.email.trim(),
-                customer_phone: formData.phone.trim(),
-                customer_address: formData.address.trim(),
-                total_amount: totalAmount,
-                status: 'pending'
-            })
-            .select('id')
-            .single();
-
-            if (orderError || !orderData) throw orderError;
-            
-            const orderItems = items.map(item => ({
-                order_id: orderData.id,
-                product_id: item.id,
-                quantity: 1,
-                price: item.price
-            }));
-            
-            const { error: itemsError } = await supabase
-                .from('order_items')
-                .insert(orderItems);
-            if (itemsError) throw itemsError;
-
-            clearCartAfterCheckout();
-            setStatus('success');
-        } catch (error) {
-            console.error('Error while making the order: ', error);
-            setStatus('failed');
-        } finally {
-            setIsSubmitting(false);
-        }
-    }
+        if (Object.values(nextErrors).some(Boolean)) return;
+        if (items.length === 0 || checkoutMutation.isPending) return;
+        checkoutMutation.mutate({
+            customer_name: formData.name.trim(),
+            customer_email: formData.email.trim(),
+            customer_phone: formData.phone.trim(),
+            customer_address: formData.address.trim(),
+            total_amount: totalAmount,
+            items: items.map(item => ({ id: item.id, price: item.price }))
+        });
+    };
 
     return (
         <div className="min-h-screen flex flex-col bg-[#FAF7F2]">
             <Header />
-            {status === 'idle' && (
+            {(checkoutMutation.isIdle || checkoutMutation.isPending) && (
                 <main className="flex flex-1 flex-col max-w-md md:max-w-dvh w-full mx-auto px-4 py-8">
                     <h1 className="text-3xl font-bold text-center text-[#2B1F1A]">Cổng thanh toán</h1>
-                    <form onSubmit={handleSubmitOrder} className="flex flex-col flex-1">
+                    <form onSubmit={handleSubmitOrder} noValidate className="flex flex-col flex-1">
                         <div className="mb-4">
                             <label className="block text-sm font-bold text-[#2B1F1A] mb-1.5">Họ và tên</label>
-                            <input type="text" name="name" required value={formData.name} onChange={handleInputChange}
+                            <input type="text" name="name" required value={formData.name} onChange={handleInputChange} onBlur={handleInputBlur}
                             placeholder="Nguyễn Văn An" className="w-full bg-[#EFE8DC] border border-stone-800 
                             rounded-lg px-3 py-2 text-[#2B1F1A] placeholder:text-stone-500 focus:outline-none" />
+                            {errors.name && <p className="text-xs italic text-red-700 mt-1">{errors.name}</p>}
                         </div>
                         <div className="mb-4">
                             <label className="block text-sm font-bold text-[#2B1F1A] mb-1.5">Email</label>
-                            <input type="email" name="email" required value={formData.email} onChange={handleInputChange}
+                            <input type="email" name="email" required value={formData.email} onChange={handleInputChange} onBlur={handleInputBlur}
                             placeholder="nguyenvanan@example.com" className="w-full bg-[#EFE8DC] border border-stone-800 
                             rounded-lg px-3 py-2 text-[#2B1F1A] placeholder:text-stone-500 focus:outline-none" />
+                            {errors.email && <p className="text-xs italic text-red-700 mt-1">{errors.email}</p>}
                         </div>
                         <div className="mb-4">
                             <label className="block text-sm font-bold text-[#2B1F1A] mb-1.5">Số điện thoại</label>
-                            <input type="tel" name="phone" required value={formData.phone} onChange={handleInputChange}
+                            <input type="tel" name="phone" required value={formData.phone} onChange={handleInputChange} onBlur={handleInputBlur}
                             placeholder="0987654321" className="w-full bg-[#EFE8DC] border border-stone-800 
                             rounded-lg px-3 py-2 text-[#2B1F1A] placeholder:text-stone-500 focus:outline-none" />
+                            {errors.phone && <p className="text-xs italic text-red-700 mt-1">{errors.phone}</p>}
                         </div>
                         <div className="mb-4">
                             <label className="block text-sm font-bold text-[#2B1F1A] mb-1.5">Địa chỉ nhận hàng</label>
-                            <input type="text" name="address" required value={formData.address} onChange={handleInputChange}
+                            <input type="text" name="address" required value={formData.address} onChange={handleInputChange} onBlur={handleInputBlur}
                             placeholder="235/79 Trường Giang, Phường Sài Gòn, Thành phố Hồ Chí Minh" className="w-full bg-[#EFE8DC] border border-stone-800 
                             rounded-lg px-3 py-2 text-[#2B1F1A] placeholder:text-stone-500 focus:outline-none" />
+                            {errors.address && <p className="text-xs italic text-red-700 mt-1">{errors.address}</p>}
                         </div>
 
                         <div className="mb-6">
@@ -135,16 +158,16 @@ export default function Checkout() {
                             <span className="text-xl font-bold text-[#2B1F1A]">{totalAmount.toLocaleString("vi-VN")} đ</span>
                         </div>
 
-                        <button type="submit" disabled={isSubmitting} className="w-full py-3 bg-[#B5482A]
+                        <button type="submit" disabled={checkoutMutation.isPending} className="w-full py-3 bg-[#B5482A]
                         hover:bg-[#9d3c22] disabled:opacity-50 text-white font-medium rounded-lg cursor-pointer
                         transition-colors text-center">
-                            {isSubmitting ? "Đang xử lý..." : "Đặt hàng"}
+                            {checkoutMutation.isPending ? "Đang xử lý..." : "Đặt hàng"}
                         </button>
                     </form>
                 </main>
             )}
 
-            {status === 'success' && (
+            {checkoutMutation.isSuccess && (
                 <main className="flex flex-1 flex-col items-center justify-center text-center px-4 py-16">
                     <h1 className= "text-2xl md:text-3xl font-bold text-[#2B1F1A] mb-4">
                         Đơn hàng của bạn đã đặt thành công
@@ -153,7 +176,7 @@ export default function Checkout() {
                 </main>
             )}
 
-            {status === 'failed' && (
+            {checkoutMutation.isError && (
                 <main className="flex flex-1 flex-col items-center justify-center text-center px-4 py-16">
                     <h1 className= "text-2xl md:text-3xl font-bold text-[#2B1F1A] mb-4">
                         Ôi! Đã có vấn đề xảy ra!

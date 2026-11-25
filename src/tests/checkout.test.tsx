@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Checkout from '@/pages/Checkout';
 import { useCartStore } from '@/store/useCartStore';
 import { supabase } from '@/utils/supabase';
@@ -20,13 +21,16 @@ describe('Checkout Page', () => {
     });
 
     it('redirects to Home when cart in localStorage is empty', () => {
+        const queryClient = new QueryClient();
         render(
-            <MemoryRouter initialEntries={['/checkout']}>
-                <Routes>
-                    <Route path="/checkout" element={<Checkout/>}/>
-                    <Route path="/" element={<div>Trang chủ</div>}/>
-                </Routes>
-            </MemoryRouter>
+            <QueryClientProvider client={queryClient}>
+                <MemoryRouter initialEntries={['/checkout']}>
+                    <Routes>
+                        <Route path="/checkout" element={<Checkout/>}/>
+                        <Route path="/" element={<div>Trang chủ</div>}/>
+                    </Routes>
+                </MemoryRouter>
+            </QueryClientProvider>
         )
 
         expect(screen.getByText('Trang chủ')).toBeInTheDocument();
@@ -37,12 +41,15 @@ describe('Checkout Page', () => {
             items: [{ id: '1', name: 'Gà nướng Bản Đôn', price: 100000, image_url: 'ga.jpg' }]
         });
 
+        const queryClient = new QueryClient();
         render(
-            <MemoryRouter initialEntries={['/checkout']}>
-                <Routes>
-                    <Route path="/checkout" element={<Checkout/>}/>
-                </Routes>
-            </MemoryRouter>
+            <QueryClientProvider client={queryClient}>
+                <MemoryRouter initialEntries={['/checkout']}>
+                    <Routes>
+                        <Route path="/checkout" element={<Checkout/>}/>
+                    </Routes>
+                </MemoryRouter>
+            </QueryClientProvider>
         )
 
         expect(screen.getByRole('heading', { name: /cổng thanh toán/i })).toBeInTheDocument();
@@ -77,12 +84,15 @@ describe('Checkout Page', () => {
             }
             return {} as never;
         });
+        const queryClient = new QueryClient();
         render(
-            <MemoryRouter initialEntries={['/checkout']}>
-                <Routes>
-                    <Route path="/checkout" element={<Checkout />} />
-                </Routes>
-            </MemoryRouter>
+            <QueryClientProvider client={queryClient}>
+                <MemoryRouter initialEntries={['/checkout']}>
+                    <Routes>
+                        <Route path="/checkout" element={<Checkout />} />
+                    </Routes>
+                </MemoryRouter>
+            </QueryClientProvider>
         );
         
         await user.type(screen.getByPlaceholderText('Nguyễn Văn An'), 'Trần Văn Nam');
@@ -121,12 +131,15 @@ describe('Checkout Page', () => {
             }
             return {} as never;
         });
+        const queryClient = new QueryClient();
         render(
-            <MemoryRouter initialEntries={['/checkout']}>
-                <Routes>
-                    <Route path="/checkout" element={<Checkout />} />
-                </Routes>
-            </MemoryRouter>
+            <QueryClientProvider client={queryClient}>
+                <MemoryRouter initialEntries={['/checkout']}>
+                    <Routes>
+                        <Route path="/checkout" element={<Checkout />} />
+                    </Routes>
+                </MemoryRouter>
+            </QueryClientProvider>
         );
         
         await user.type(screen.getByPlaceholderText('Nguyễn Văn An'), 'Trần Văn Nam');
@@ -139,5 +152,34 @@ describe('Checkout Page', () => {
         expect(screen.getByText('Xin vui lòng thử lại trong vài phút nữa')).toBeInTheDocument();
         
         expect(useCartStore.getState().items).toHaveLength(1);
+    });
+
+    it('shows validation errors when submitting invalid inputs', async () => {
+        const user = userEvent.setup();
+        useCartStore.setState({
+            items: [{ id: 'prod-1', name: 'Gà nướng Bản Đôn', price: 100000, image_url: 'ga.jpg' }]
+        });
+
+        const queryClient = new QueryClient();
+        render(
+            <QueryClientProvider client={queryClient}>
+                <MemoryRouter initialEntries={['/checkout']}>
+                    <Routes>
+                        <Route path="/checkout" element={<Checkout />} />
+                    </Routes>
+                </MemoryRouter>
+            </QueryClientProvider>
+        );
+
+        await user.type(screen.getByPlaceholderText('Nguyễn Văn An'), 'An');
+        await user.type(screen.getByPlaceholderText('nguyenvanan@example.com'), 'invalid-email');
+        await user.type(screen.getByPlaceholderText('0987654321'), '12345');
+        await user.type(screen.getByPlaceholderText(/Trường Giang/i), '123');
+        await user.click(screen.getByRole('button', { name: /đặt hàng/i }));
+
+        expect(screen.getAllByText('Phải có ít nhất 5 ký tự')).toHaveLength(2);
+        expect(screen.getByText('Email sai định dạng: @email.com')).toBeInTheDocument();
+        expect(screen.getByText('Phải có 10 hoặc 11 chữ số')).toBeInTheDocument();
+        expect(supabase.from).not.toHaveBeenCalled();
     });
 })
