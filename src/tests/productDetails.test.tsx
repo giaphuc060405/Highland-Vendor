@@ -2,7 +2,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
-import ProductDetail, { type Product }  from "@/pages/ProductDetails";
+import ProductDetail from "@/pages/ProductDetails";
+import { type Product } from "@/services/productService";
 import { supabase } from "@/utils/supabase";
 import { useCartStore } from "@/store/useCartStore";
 
